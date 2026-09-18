@@ -1,4 +1,5 @@
-## Mapa da Assistencia Social em Niteroi
+
+Mapa da Assistencia Social em Niteroi
 
 
 Este projeto apresenta um mapa interativo dos serviços e equipamentos da assistência social do município de Niterói. A aplicação reúne e consolida informações disponibilizadas pelo SIG Niterói, permitindo consultar a localização, o tipo de serviço, o endereço, o horário de funcionamento, o telefone, o público atendido, a área de abrangência, o e-mail e outras informações de cada equipamento.
