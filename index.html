@@ -1191,6 +1191,9 @@ function legacyAddress(p) {
             console.log("CSV carregado:", csvData);
 console.log("Quantidade de registros no CSV:", csvData.length);
 console.log("Primeiro registro:", csvData[0]);
+
+            console.log("Cabeçalhos encontrados:", Object.keys(csvData[0]));
+console.log("Primeiros 5 registros:", csvData.slice(0, 5));
             
             records = buildRecords(current, legacy, regions, neighborhoods);
 
