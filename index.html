@@ -1150,6 +1150,13 @@ const [regions, csvData] = await Promise.all([
     /* Constrói os equipamentos diretamente a partir do CSV. */
     records = buildRecords(csvData);
 
+    console.log(
+  "Banco Araribóia - Vila Ipiranga:",
+  records.find((record) =>
+    norm(record.nome).includes("vilaipiranga")
+  )
+);
+
     /* Desenha as regiões administrativas. */
     drawRegions(regions);
 
