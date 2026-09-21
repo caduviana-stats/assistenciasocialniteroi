@@ -562,9 +562,6 @@ MAPA DA ASSISTÊNCIA SOCIAL DE NITERÓI
 const API = Object.freeze({
   regions:
     "https://services8.arcgis.com/TpaOLI1HCh5AcRQB/arcgis/rest/services/Grouplayer_camadas_agol/FeatureServer/2/query",
-
-  neighborhoods:
-    "https://services8.arcgis.com/TpaOLI1HCh5AcRQB/arcgis/rest/services/Grouplayer_camadas_agol/FeatureServer/0/query",
 });
 
 /* Base consolidada dos equipamentos socioassistenciais. */
@@ -1184,11 +1181,10 @@ function buildRecords(csvData) {
 async function init() {
   try {
     /* Carrega as regiões, os bairros e a base consolidada. */
-    const [regions, neighborhoods, csvData] = await Promise.all([
-      getGeoJSON(API.regions),
-      getGeoJSON(API.neighborhoods),
-      getCSV(DATA_URL),
-    ]);
+const [regions, csvData] = await Promise.all([
+  getGeoJSON(API.regions),
+  getCSV(DATA_URL),
+]);
 
     /* Constrói os equipamentos diretamente a partir do CSV. */
     records = buildRecords(csvData);
