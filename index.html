@@ -1193,48 +1193,142 @@ console.log("Quantidade de registros no CSV:", csvData.length);
 console.log("Primeiro registro:", csvData[0]);
             
             records = buildRecords(current, legacy, regions, neighborhoods);
-            drawRegions(regions);
-            records.forEach((record) => {
-              const [lon, lat] = record.feature.geometry.coordinates,
-                marker = L.circleMarker(
-                  [lat, lon],
-                  markerStyle(record),
-                ).bindTooltip(record.nome, {
-                  direction: "top",
-                  className: "equip-tooltip",
-                });
-              marker.on("click", () => showDetails(record));
-              markers.push({ marker, record });
-            });
-            buildControls();
-            renderMarkers();
-            setupSearch();
-            document.getElementById("status").textContent =
-              `${current.features.length} registros atuais e ${legacy.features.length} registros complementares consolidados em ${records.length} equipamentos únicos.`;
-            const bounds = L.geoJSON(regions).getBounds();
-            map.fitBounds(bounds, { padding: [18, 18] });
-          } catch (err) {
-            console.error(err);
-            document.getElementById("status").innerHTML =
-              '<span class="error">Não foi possível carregar as camadas. Verifique a conexão e tente novamente.</span>';
-            document
-              .getElementById("loading")
-              .querySelector(".loading-card").textContent =
-              "Falha ao carregar os dados do SIG Niterói";
-            return;
-          }
-          document.getElementById("loading").remove();
+
+                /* Associa as coordenadas revisadas do CSV aos equipamentos. */
+    const coordinatesByName = new Map();
+
+    csvData.forEach((row) => {
+      const nome =
+        row["Nome do equipamento/serviço"] ||
+        row["Nome do equipamento ou serviço"] ||
+        row["Nome"];
+
+      const latitude = parseCoordinate(row["Latitude"]);
+      const longitude = parseCoordinate(row["Longitude"]);
+
+      if (
+        nome &&
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude)
+      ) {
+        coordinatesByName.set(norm(nome), {
+          latitude,
+          longitude,
+        });
+      }
+    });
+
+    records.forEach((record) => {
+      const coordinates = coordinatesByName.get(
+        norm(record.nome)
+      );
+
+      if (coordinates) {
+        record.latitude = coordinates.latitude;
+        record.longitude = coordinates.longitude;
+      }
+    });
+
+    console.log(
+      "Equipamentos com coordenadas do CSV:",
+      records.filter(
+        (r) =>
+          Number.isFinite(r.latitude) &&
+          Number.isFinite(r.longitude)
+      ).length
+    );
+
+                drawRegions(regions);
+
+    records.forEach((record) => {
+      /* Prioriza as coordenadas revisadas da planilha. */
+      let lat = record.latitude;
+      let lon = record.longitude;
+
+      /* Se não houver coordenada na planilha, usa o ponto original do SIG. */
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lon)
+      ) {
+        const coordinates = record.feature?.geometry?.coordinates;
+
+        if (!coordinates) {
+          console.warn(
+            "Equipamento sem coordenadas:",
+            record.nome
+          );
+          return;
         }
-        /* Eventos globais da interface. */
-        document.getElementById("showRegions").onchange = (e) =>
-          e.target.checked
-            ? regionLayer.addTo(map)
-            : map.removeLayer(regionLayer);
-        document.getElementById("close").onclick = () =>
-          document.getElementById("drawer").classList.remove("open");
-        /* Ponto de entrada da aplicação. */
-        init();
-      })();
+
+        [lon, lat] = coordinates;
+
+        console.warn(
+          "Usando coordenada original do SIG:",
+          record.nome
+        );
+      }
+
+      const marker = L.circleMarker(
+        [lat, lon],
+        markerStyle(record)
+      ).bindTooltip(record.nome, {
+        direction: "top",
+        className: "equip-tooltip",
+      });
+
+      marker.on("click", () => showDetails(record));
+
+      markers.push({
+        marker,
+        record
+      });
+    });
+
+    buildControls();
+    renderMarkers();
+    setupSearch();
+
+    document.getElementById("status").textContent =
+      `${current.features.length} registros atuais e ${legacy.features.length} registros complementares consolidados em ${records.length} equipamentos únicos.`;
+
+    const bounds = L.geoJSON(regions).getBounds();
+
+    map.fitBounds(bounds, {
+      padding: [18, 18]
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    document.getElementById("status").innerHTML =
+      '<span class="error">Não foi possível carregar as camadas. Verifique a conexão e tente novamente.</span>';
+
+    document
+      .getElementById("loading")
+      .querySelector(".loading-card").textContent =
+      "Falha ao carregar os dados do SIG Niterói";
+
+    return;
+  }
+
+  document.getElementById("loading").remove();
+}
+
+           
+     /* Eventos globais da interface. */
+document.getElementById("showRegions").onchange = (e) =>
+  e.target.checked
+    ? regionLayer.addTo(map)
+    : map.removeLayer(regionLayer);
+
+document.getElementById("close").onclick = () =>
+  document.getElementById("drawer").classList.remove("open");
+
+/* Ponto de entrada da aplicação. */
+init();
+
+
+            
     </script>
   </body>
 </html>
