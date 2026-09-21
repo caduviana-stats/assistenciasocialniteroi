@@ -1151,6 +1151,13 @@ const [regions, csvData] = await Promise.all([
     records = buildRecords(csvData);
 
     console.log(
+  "Lélia Gonzalez:",
+  records.find((record) =>
+    norm(record.nome).includes("leliagonzalez")
+  )
+);
+
+    console.log(
   "Banco Araribóia - Vila Ipiranga:",
   records.find((record) =>
     norm(record.nome).includes("vilaipiranga")
