@@ -1,5 +1,6 @@
 <!doctype html>
 <!--
+<!--
 ===============================================================================
 MAPA DA ASSISTÊNCIA SOCIAL DE NITERÓI
 ===============================================================================
@@ -11,29 +12,45 @@ MAPA DA ASSISTÊNCIA SOCIAL DE NITERÓI
 3. Estrutura da interface (HTML)
 4. Configurações e fontes de dados
 5. Funções utilitárias
-6. Consolidação das bases do SIG Niterói
+6. Construção da base de equipamentos
 7. Configuração do mapa Leaflet
-8. Painel de detalhes e marcadores
+8. Painel de detalhes, marcadores e regiões
 9. Filtros, busca e navegação
 10. Inicialização da aplicação
 
 ## Funcionamento geral
 
-- Consulta quatro camadas públicas do SIG Niterói em formato GeoJSON.
-- Reúne a base atual e a base complementar de equipamentos.
-- Elimina duplicidades conhecidas sem descartar campos complementares.
-- Identifica bairro e região administrativa pelo endereço e pela geometria.
-- Exibe pontos clicáveis sobre as cinco regiões administrativas oficiais.
+- Utiliza um CSV consolidado como fonte principal dos equipamentos
+  socioassistenciais de Niterói.
+- O CSV reúne os dados cadastrais, territoriais e as coordenadas de
+  latitude e longitude dos equipamentos.
+- Consulta o SIG Niterói para obter os limites oficiais das cinco
+  regiões administrativas.
+- Posiciona os equipamentos diretamente pelas coordenadas disponíveis
+  na base consolidada.
+- Permite filtrar os equipamentos por região administrativa e tipo
+  de serviço.
+- Disponibiliza pesquisa textual e painel com informações detalhadas
+  de cada equipamento.
+
+## Fontes de dados
+
+- Equipamentos: dados/equipamentos_niteroi.csv
+- Regiões administrativas: SIG Niterói
 
 ## Manutenção rápida
 
-- URLs das camadas: seção 4.1.
-- Cores do mapa: seção 4.2.
-- Regras de classificação: função `category`, na seção 5.4.
-- Regras de consolidação: função `buildRecords`, na seção 6.
+- Fonte dos equipamentos: constante DATA_URL, seção 4.1.
+- Fonte territorial: objeto API, seção 4.1.
+- Cores das regiões e dos equipamentos: seção 4.2.
+- Tratamento do CSV: funções da seção 5.
+- Classificação dos equipamentos: função category(), seção 5.
+- Construção dos registros: função buildRecords(), seção 6.
+- Inicialização e carregamento dos dados: função init(), seção 10.
 
 ===============================================================================
 -->
+
 <html lang="pt-BR">
   <head>
     <!-- ================= 1. METADADOS E DEPENDÊNCIAS ================= -->
@@ -1111,11 +1128,17 @@ function buildRecords(csvData) {
           });
           map.on("click", () => (results.style.display = "none"));
         }
-        /* ====================================================================
-         * 10. INICIALIZAÇÃO DA APLICAÇÃO
-         * ====================================================================
-         * Carrega as quatro fontes em paralelo e monta a interface completa.
-         */
+        
+  /* 
+   ====================================================================
+ * 10. INICIALIZAÇÃO DA APLICAÇÃO
+ * ====================================================================
+ *
+ * Carrega em paralelo a base consolidada de equipamentos e os limites
+ * das regiões administrativas, monta os marcadores e inicializa os
+ * controles da interface.
+ */
+        
 async function init() {
   try {
     /* Carrega as regiões, os bairros e a base consolidada. */
