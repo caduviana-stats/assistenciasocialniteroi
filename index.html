@@ -1318,20 +1318,19 @@ console.log("Primeiros 5 registros:", csvData.slice(0, 5));
 }
 
            
-     /* Eventos globais da interface. */
-document.getElementById("showRegions").onchange = (e) =>
-  e.target.checked
-    ? regionLayer.addTo(map)
-    : map.removeLayer(regionLayer);
+        /* Eventos globais da interface. */
+        document.getElementById("showRegions").onchange = (e) =>
+          e.target.checked
+            ? regionLayer.addTo(map)
+            : map.removeLayer(regionLayer);
 
-document.getElementById("close").onclick = () =>
-  document.getElementById("drawer").classList.remove("open");
+        document.getElementById("close").onclick = () =>
+          document.getElementById("drawer").classList.remove("open");
 
-/* Ponto de entrada da aplicação. */
-init();
+        /* Ponto de entrada da aplicação. */
+        init();
 
-
-            
+      })();
     </script>
   </body>
 </html>
