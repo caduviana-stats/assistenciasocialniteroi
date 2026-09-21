@@ -734,51 +734,8 @@ async function getGeoJSON(url) {
   return j;
 }
 
-/* 5.9 — Teste geométrico "ponto dentro do polígono". */
-function inRing([x, y], ring) {
-  let inside = false;
 
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i];
-    const [xj, yj] = ring[j];
-
-    if (
-      yi > y !== yj > y &&
-      x < ((xj - xi) * (y - yi)) / (yj - yi || 1e-15) + xi
-    ) {
-      inside = !inside;
-    }
-  }
-
-  return inside;
-}
-
-/* 5.10 — Suporta polígonos simples, multipolígonos e áreas vazadas. */
-function inGeometry(point, geometry) {
-  if (!point || !geometry) return false;
-
-  const polys =
-    geometry.type === "Polygon"
-      ? [geometry.coordinates]
-      : geometry.type === "MultiPolygon"
-        ? geometry.coordinates
-        : [];
-
-  return polys.some(
-    (p) =>
-      inRing(point, p[0]) &&
-      !p.slice(1).some((h) => inRing(point, h)),
-  );
-}
-
-/* 5.11 — Retorna o primeiro território que contém o ponto informado. */
-function spatialFeature(point, collection) {
-  return collection.features.find((f) =>
-    inGeometry(point, f.geometry)
-  );
-}
-
-/* 5.12 — Agrupa os equipamentos em categorias de filtro. */
+/* 5.9 — Agrupa os equipamentos em categorias de filtro. */
 function category(p) {
   const s = norm(
     [p.nome, p.tipoServico, p.tipoEquipamento].join(" ")
@@ -844,25 +801,6 @@ function category(p) {
   return "Outros serviços";
 }
 
-/* 5.13 — Reconstrói o endereço da base antiga do SIG. */
-function legacyAddress(p) {
-  let s = clean(p.tx_logradouro);
-  const n = clean(p.tx_numero);
-  const r = clean(p.tx_referencia);
-
-  if (
-    n &&
-    !new RegExp("(?:^|\\D)" + n + "(?:\\D|$)").test(s)
-  ) {
-    s += (s ? ", " : "") + n;
-  }
-
-  if (r) {
-    s += (s ? " — " : "") + r;
-  }
-
-  return s;
-}
         
      /* ====================================================================
  * 6. CONSTRUÇÃO DA BASE DE EQUIPAMENTOS
