@@ -1183,78 +1183,33 @@ function buildRecords(csvData) {
          */
 async function init() {
   try {
-    /* Carrega em paralelo:
-     * 1. limites das regiões administrativas;
-     * 2. limites dos bairros;
-     * 3. base consolidada dos equipamentos.
-     */
+    /* Carrega as regiões, os bairros e a base consolidada. */
     const [regions, neighborhoods, csvData] = await Promise.all([
       getGeoJSON(API.regions),
       getGeoJSON(API.neighborhoods),
       getCSV(DATA_URL),
     ]);
 
-    /* Constrói os registros diretamente a partir do CSV. */
+    /* Constrói os equipamentos diretamente a partir do CSV. */
     records = buildRecords(csvData);
 
-          
-                drawRegions(regions);
+    /* Desenha as regiões administrativas. */
+    drawRegions(regions);
 
-   records.forEach((record) => {
-  const lat = record.latitude;
-  const lon = record.longitude;
+    /* Cria os marcadores a partir de Latitude e Longitude do CSV. */
+    records.forEach((record) => {
+      const lat = record.latitude;
+      const lon = record.longitude;
 
-  /* Ignora registros sem coordenadas válidas. */
-  if (
-    !Number.isFinite(lat) ||
-    !Number.isFinite(lon)
-  ) {
-    console.warn(
-      "Equipamento sem coordenadas válidas:",
-      record.nome
-    );
-    return;
-  }
-
-  const marker = L.circleMarker(
-    [lat, lon],
-    markerStyle(record)
-  ).bindTooltip(record.nome, {
-    direction: "top",
-    className: "equip-tooltip",
-  });
-
-  marker.on("click", () =>
-    showDetails(record)
-  );
-
-  markers.push({
-    marker,
-    record
-  });
-});
-    
-      /* Se não houver coordenada na planilha, usa o ponto original do SIG. */
       if (
         !Number.isFinite(lat) ||
         !Number.isFinite(lon)
       ) {
-        const coordinates = record.feature?.geometry?.coordinates;
-
-        if (!coordinates) {
-          console.warn(
-            "Equipamento sem coordenadas:",
-            record.nome
-          );
-          return;
-        }
-
-        [lon, lat] = coordinates;
-
         console.warn(
-          "Usando coordenada original do SIG:",
+          "Equipamento sem coordenadas válidas:",
           record.nome
         );
+        return;
       }
 
       const marker = L.circleMarker(
@@ -1265,42 +1220,48 @@ async function init() {
         className: "equip-tooltip",
       });
 
-      marker.on("click", () => showDetails(record));
+      marker.on("click", () => {
+        showDetails(record);
+      });
 
       markers.push({
         marker,
-        record
+        record,
       });
     });
 
+    /* Monta filtros, marcadores e pesquisa. */
     buildControls();
     renderMarkers();
     setupSearch();
 
- document.getElementById("status").textContent =
-  `${records.length} equipamentos`;
-    
+    /* Atualiza a informação exibida no painel lateral. */
+    document.getElementById("status").textContent =
+      `${records.length} equipamentos carregados da base consolidada.`;
+
+    /* Ajusta o enquadramento inicial às regiões de Niterói. */
     const bounds = L.geoJSON(regions).getBounds();
 
     map.fitBounds(bounds, {
-      padding: [18, 18]
+      padding: [18, 18],
     });
+
+    /* Remove a tela de carregamento. */
+    document.getElementById("loading").remove();
 
   } catch (err) {
     console.error(err);
 
     document.getElementById("status").innerHTML =
-      '<span class="error">Não foi possível carregar as camadas. Verifique a conexão e tente novamente.</span>';
+      '<span class="error">Não foi possível carregar os dados. Verifique a conexão e tente novamente.</span>';
 
-    document
-      .getElementById("loading")
-      .querySelector(".loading-card").textContent =
-      "Falha ao carregar os dados do SIG Niterói";
+    const loading = document.getElementById("loading");
 
-    return;
+    if (loading) {
+      loading.querySelector(".loading-card").textContent =
+        "Falha ao carregar o mapa de Niterói";
+    }
   }
-
-  document.getElementById("loading").remove();
 }
 
            
